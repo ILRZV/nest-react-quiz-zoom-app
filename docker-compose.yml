@@ -1,0 +1,46 @@
+version: "3"
+
+services:
+  postgis:
+    image: postgres
+    expose:
+      - 5432
+    ports:
+      - 5432:5432
+    container_name: postgis
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=quizzes_app
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - 5000:5000
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=quizzes_app
+      - POSTGRES_HOST=postgis
+      - FRONTEND_HOST=frontend
+    depends_on:
+      - postgis
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    tty: true
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
